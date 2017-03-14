@@ -26,6 +26,12 @@ if len(sys.argv) < 2:
 	print('Must provide at least one argument.', file=sys.stderr)
 	raise SystemExit(1)
 
+client_mode_only = False;
+
+if sys.argv[1] == '--client-mode-only':
+	client_mode_only = True;
+	del sys.argv[1]
+
 use_filesystem = not sys.platform.lower().startswith('linux')
 
 if sys.argv[1] == '--socket':
@@ -52,9 +58,12 @@ def eintr_retry_call(func, *args, **kwargs):
 try:
 	eintr_retry_call(sock.connect, address)
 except Exception:
-	# Run the powerline renderer
-	args = ['powerline-render'] + sys.argv[1:]
-	os.execvp('powerline-render', args)
+	if client_mode_only:
+		raise SystemExit(2)
+	else:
+		# Run the powerline renderer
+		args = ['powerline-render'] + sys.argv[1:]
+		os.execvp('powerline-render', args)
 
 fenc = get_preferred_output_encoding()
 

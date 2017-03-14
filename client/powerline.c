@@ -88,10 +88,17 @@ int main(int argc, char *argv[]) {
 	char *wd = NULL;
 	char **envp;
 	const char *address;
+	int client_mode_only = 0;
 
 	if (argc < 2) {
 		printf("Must provide at least one argument.\n");
 		return EXIT_FAILURE;
+	}
+
+	if (argc > 1 && strcmp(argv[1], "--client-mode-only") == 0) {
+		client_mode_only = 1;
+		argv += 1;
+		argc -= 1;
 	}
 
 	if (argc > 3 && strcmp(argv[1], "--socket") == 0) {
@@ -113,13 +120,17 @@ int main(int argc, char *argv[]) {
 
 	if (connect(sd, (struct sockaddr *) &server, true_sun_len(&server)) < 0) {
 		close(sd);
-		/* We failed to connect to the daemon, execute powerline instead */
-		argc = (argc < NEW_ARGV_SIZE - 1) ? argc : NEW_ARGV_SIZE - 1;
-		for (i = 1; i < argc; i++)
-			newargv[i] = argv[i];
-		newargv[0] = "powerline-render";
-		newargv[argc] = NULL;
-		execvp("powerline-render", newargv);
+		if (client_mode_only) {
+			return 2;
+		} else {
+			/* We failed to connect to the daemon, execute powerline instead */
+			argc = (argc < NEW_ARGV_SIZE - 1) ? argc : NEW_ARGV_SIZE - 1;
+			for (i = 1; i < argc; i++)
+				newargv[i] = argv[i];
+			newargv[0] = "powerline-render";
+			newargv[argc] = NULL;
+			execvp("powerline-render", newargv);
+		}
 	}
 
 	snprintf(num_args, NUM_ARGS_SIZE, "%x", argc - 1);

@@ -18,6 +18,11 @@ elif which uname >/dev/null ; then
 	fi
 fi
 
+if test "$1" = "--client-mode-only" ; then
+	CLIENT_MODE_ONLY=1
+	shift
+fi
+
 if test "$1" = "--socket" ; then
 	shift
 	ADDRESS="$1"
@@ -49,5 +54,9 @@ fi
 ) 2>/dev/null | socat -lf/dev/null -t 10 - "$ADDRESS"
 
 if test $? -ne 0 ; then
-	powerline-render "$@"
+	if test -n "$CLIENT_MODE_ONLY" ; then
+		exit 2
+	else
+		powerline-render "$@"
+	fi
 fi
